@@ -11,7 +11,7 @@ categories = [
     "development-tools",
     "development-tools::cargo-plugins",
 ]
-description = "This extends Cargo to allow you to add and remove dependencies by modifying your `Cargo.toml` file from the command line. It contains `cargo add`, `cargo rm`, and `cargo upgrade`."
+description = "This extends Cargo to allow you to add and remove dependencies by modifying your `Cargo.toml` file from the command line. It contains `cargo add`, `cargo rm`, `cargo upgrade`, and `cargo tidy`."
 documentation = "https://github.com/killercup/cargo-edit/blob/master/README.md#available-subcommands"
 homepage = "https://github.com/killercup/cargo-edit"
 keywords = [
@@ -37,6 +37,11 @@ required-features = ["add"]
 name = "cargo-rm"
 path = "src/bin/rm/main.rs"
 required-features = ["rm"]
+
+[[bin]]
+name = "cargo-tidy"
+path = "src/bin/tidy/main.rs"
+required-features = ["tidy"]
 
 [[bin]]
 name = "cargo-upgrade"
@@ -84,9 +89,11 @@ add = []
 default = [
     "add",
     "rm",
+    "tidy",
     "upgrade",
 ]
 rm = []
 test-external-apis = []
+tidy = []
 unstable = []
 upgrade = []

@@ -6,6 +6,7 @@ Currently available subcommands:
 
 - [`cargo add`](#cargo-add)
 - [`cargo rm`](#cargo-rm)
+- [`cargo tidy`](#cargo-tidy)
 - [`cargo upgrade`](#cargo-upgrade)
 
 [![Build Status](https://travis-ci.org/killercup/cargo-edit.svg?branch=master)](https://travis-ci.org/killercup/cargo-edit)
@@ -144,6 +145,36 @@ Options:
     -V --version            Show version.
 
 Remove a dependency from a Cargo.toml manifest file.
+```
+
+### `cargo tidy`
+
+Format your `Cargo.toml` file.
+
+Currently only sorts dependencies into alphabetical order.
+
+#### Examples
+
+```sh
+# Reformat Cargo.toml for the current crate
+$ cargo tidy
+```
+
+#### Usage
+
+```plain
+Reformat a Cargo.toml manifest file.
+
+Usage:
+    cargo tidy [FLAGS] [OPTIONS]
+
+Flags:
+    -h, --help       Prints help information
+    -q, --quiet      Do not print any output in case of success.
+    -V, --version    Prints version information
+
+Options:
+    --manifest-path <path>    Path to the manifest to remove a dependency from.
 ```
 
 ### `cargo upgrade`

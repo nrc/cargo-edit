@@ -19,7 +19,7 @@ pub struct Manifest {
     pub data: toml_edit::Document,
 }
 
-/// If a manifest is specified, return that one, otherise perform a manifest search starting from
+/// If a manifest is specified, return that one, otherwise perform a manifest search starting from
 /// the current directory.
 /// If a manifest is specified, return that one. If a path is specified, perform a manifest search
 /// starting from there. If nothing is specified, start searching from the current directory
@@ -358,6 +358,16 @@ impl Manifest {
             .map(|dep| self.insert_into_table(table, dep))
             .collect::<Result<Vec<_>>>()?;
 
+        Ok(())
+    }
+
+    /// Sort a table using its natural order.
+    ///
+    /// Returns an error if the table cannot be found.
+    pub fn sort_table(&mut self, table_path: &[String]) -> Result<()> {
+        if let Some(table) = self.get_table(table_path)?.as_table_mut() {
+            table.sort_values();
+        }
         Ok(())
     }
 }
