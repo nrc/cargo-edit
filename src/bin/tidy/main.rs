@@ -33,6 +33,10 @@ struct Args {
     #[structopt(long = "manifest-path", value_name = "path")]
     manifest_path: Option<PathBuf>,
 
+    /// Reformat all packages in the workspace.
+    #[structopt(long = "all")]
+    all: bool,
+
     /// Do not print any output in case of success.
     #[structopt(long = "quiet", short = "q")]
     quiet: bool,

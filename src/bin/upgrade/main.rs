@@ -17,7 +17,7 @@ extern crate error_chain;
 use crate::errors::*;
 use cargo_edit::{
     find, get_latest_dependency, registry_url, update_registry_index, CrateName, Dependency,
-    LocalManifest,
+    Manifests,
 };
 use failure::Fail;
 use std::collections::{HashMap, HashSet};
@@ -95,9 +95,6 @@ struct Args {
     pub to_lockfile: bool,
 }
 
-/// A collection of manifests.
-struct Manifests(Vec<(LocalManifest, cargo_metadata::Package)>);
-
 /// Helper function to check whether a `cargo_metadata::Dependency` is a version dependency.
 fn is_version_dep(dependency: &cargo_metadata::Dependency) -> bool {
     match dependency.source {
@@ -125,61 +122,20 @@ fn dry_run_message() -> Result<()> {
         .chain_err(|| "Failed to print dry run message")
 }
 
-impl Manifests {
-    /// Get all manifests in the workspace.
-    fn get_all(manifest_path: &Option<PathBuf>) -> Result<Self> {
-        let mut cmd = cargo_metadata::MetadataCommand::new();
-        cmd.no_deps();
-        if let Some(path) = manifest_path {
-            cmd.manifest_path(path);
-        }
-        let result = cmd.exec().map_err(|e| {
-            Error::from(e.compat()).chain_err(|| "Failed to get workspace metadata")
-        })?;
-        result
-            .packages
-            .into_iter()
-            .map(|package| {
-                Ok((
-                    LocalManifest::try_new(Path::new(&package.manifest_path))?,
-                    package,
-                ))
-            })
-            .collect::<Result<Vec<_>>>()
-            .map(Manifests)
-    }
-
-    /// Get the manifest specified by the manifest path. Try to make an educated guess if no path is
-    /// provided.
-    fn get_local_one(manifest_path: &Option<PathBuf>) -> Result<Self> {
-        let resolved_manifest_path: String = find(&manifest_path)?.to_string_lossy().into();
-
-        let manifest = LocalManifest::find(&manifest_path)?;
-
-        let mut cmd = cargo_metadata::MetadataCommand::new();
-        cmd.no_deps();
-        if let Some(path) = manifest_path {
-            cmd.manifest_path(path);
-        }
-        let result = cmd
-            .exec()
-            .map_err(|e| Error::from(e.compat()).chain_err(|| "Invalid manifest"))?;
-        let packages = result.packages;
-        let package = packages
-            .iter()
-            .find(|p| p.manifest_path.to_string_lossy() == resolved_manifest_path)
-            // If we have successfully got metadata, but our manifest path does not correspond to a
-            // package, we must have been called against a virtual manifest.
-            .chain_err(|| {
-                "Found virtual manifest, but this command requires running against an \
-                 actual package in this workspace. Try adding `--all`."
-            })?;
-
-        Ok(Manifests(vec![(manifest, package.to_owned())]))
-    }
-
+trait ManifestDeps {
     /// Get the the combined set of dependencies to upgrade. If the user has specified
     /// per-dependency desired versions, extract those here.
+    fn get_dependencies(&self, only_update: Vec<String>) -> Result<DesiredUpgrades>;
+
+    /// Upgrade the manifests on disk following the previously-determined upgrade schema.
+    fn upgrade(self, upgraded_deps: &ActualUpgrades, dry_run: bool) -> Result<()>;
+
+    /// Update dependencies in Cargo.toml file(s) to match the corresponding
+    /// version in Cargo.lock.
+    fn sync_to_lockfile(self, dry_run: bool) -> Result<()>;
+}
+
+impl ManifestDeps for Manifests {
     fn get_dependencies(&self, only_update: Vec<String>) -> Result<DesiredUpgrades> {
         // Map the names of user-specified dependencies to the (optionally) requested version.
         let selected_dependencies = only_update
@@ -238,7 +194,6 @@ impl Manifests {
         ))
     }
 
-    /// Upgrade the manifests on disk following the previously-determined upgrade schema.
     fn upgrade(self, upgraded_deps: &ActualUpgrades, dry_run: bool) -> Result<()> {
         if dry_run {
             dry_run_message()?;
@@ -259,8 +214,6 @@ impl Manifests {
         Ok(())
     }
 
-    /// Update dependencies in Cargo.toml file(s) to match the corresponding
-    /// version in Cargo.lock.
     fn sync_to_lockfile(self, dry_run: bool) -> Result<()> {
         // Get locked dependencies. For workspaces with multiple Cargo.toml
         // files, there is only a single lockfile, so it suffices to get

@@ -169,6 +169,7 @@ Usage:
     cargo tidy [FLAGS] [OPTIONS]
 
 Flags:
+        --all        Reformat all packages in the workspace.
     -h, --help       Prints help information
     -q, --quiet      Do not print any output in case of success.
     -V, --version    Prints version information

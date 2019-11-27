@@ -23,6 +23,7 @@ mod dependency;
 mod errors;
 mod fetch;
 mod manifest;
+mod manifests;
 mod registry;
 
 pub use crate::crate_name::CrateName;
@@ -33,4 +34,5 @@ pub use crate::fetch::{
     get_latest_dependency, update_registry_index,
 };
 pub use crate::manifest::{find, LocalManifest, Manifest};
+pub use crate::manifests::Manifests;
 pub use crate::registry::registry_url;
