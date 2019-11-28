@@ -1,6 +1,6 @@
 //! `cargo tidy`
 
-use cargo_edit::Manifest;
+use cargo_edit::{Manifest, Manifests};
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -46,11 +46,18 @@ struct Args {
 
 fn handle_tidy(args: &Args) -> Result<()> {
     let manifest_path = &args.manifest_path;
-    let mut manifest = Manifest::open(manifest_path)?;
-    manifest.sort_table(&["dependencies".to_owned()])?;
+    let mut manifests = if args.all {
+        Manifests::get_all(manifest_path)
+    } else {
+        Manifests::get_local_one(manifest_path)
+    }?;
 
-    let mut file = Manifest::find_file(manifest_path)?;
-    manifest.write_to_file(&mut file)?;
+    for (manifest, package) in manifests.0.iter_mut() {
+        manifest.sort_table(&["dependencies".to_owned()])?;
+
+        let mut file = Manifest::find_file(&Some(package.manifest_path.clone()))?;
+        manifest.write_to_file(&mut file)?;
+    }
 
     Ok(())
 }

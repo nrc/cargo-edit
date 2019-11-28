@@ -1,6 +1,6 @@
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use std::{env, str};
 
@@ -397,6 +397,12 @@ impl Deref for LocalManifest {
 
     fn deref(&self) -> &Manifest {
         &self.manifest
+    }
+}
+
+impl DerefMut for LocalManifest {
+    fn deref_mut(&mut self) -> &mut Manifest {
+        &mut self.manifest
     }
 }
 

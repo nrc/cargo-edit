@@ -6,4 +6,7 @@ version = "0.1.0"
 path = "../../dummy.rs"
 
 [dependencies]
+pad = "0.1"
+serde_json = "1.0"
+docopt = "0.8"
 libc = "0.2.28"
